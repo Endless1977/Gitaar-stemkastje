@@ -25,4 +25,4 @@ Een waarschuwing verschijnt als een snaar 3 halve tonen of meer omhoog moet.
 GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -H windowsgui" -o Stemkastje.exe .
 ```
 
-Een kant-en-klare `Stemkastje.exe` staat bij de Releases.
+Een kant-en-klare versie staat in [`download/Stemkastje.exe`](download/Stemkastje.exe). Windows SmartScreen kan waarschuwen omdat de exe niet ondertekend is: kies *Meer informatie* → *Toch uitvoeren*.
