@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body style="margin:0">
+<title>Stemkastje</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: één kolom-instrument — keuze boven, meter in het midden, zes snaren eronder. Bewust één donker "neon"-thema. */
+:root{
+  --bg:#070B14; --panel:#0C1424; --panel2:#101B30; --line:#1E3A5F; --fg:#E4F2FF; --muted:#8BA6C4;
+  --neon:#2FD8FF; --neon-glow:rgba(47,216,255,.55); --neon-soft:rgba(47,216,255,.10);
+  --accent:#2FD8FF; --accent-soft:rgba(47,216,255,.12);
+  --up:#FFB454; --up-soft:rgba(255,180,84,.14); --down:#7FA8FF; --down-soft:rgba(127,168,255,.14); --ok:#4DFFA6; --ok-soft:rgba(77,255,166,.13);
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Consolas, monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);background-image:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(47,216,255,.12), transparent 70%);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:24px 48px;min-height:100vh}
+.wrap{max-width:720px;margin:0 auto;display:grid;gap:20px}
+h1{font-family:var(--display);font-weight:700;font-size:2.1rem;letter-spacing:.01em;margin:0;color:var(--neon);text-shadow:0 0 8px var(--neon-glow),0 0 22px rgba(47,216,255,.3)}
+.sub{color:var(--muted);margin:4px 0 0;max-width:60ch}
+.label{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--neon);font-weight:600;opacity:.85}
+.pick{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:end}
+.pick > div{display:grid;gap:6px;min-width:0}
+.arrow{font-family:var(--mono);color:var(--neon);padding-bottom:10px;text-shadow:0 0 6px var(--neon-glow)}
+.neon{border:1px solid var(--neon);box-shadow:0 0 0 1px rgba(47,216,255,.15),0 0 12px rgba(47,216,255,.28),inset 0 0 12px rgba(47,216,255,.06)}
+select{font:inherit;font-weight:500;padding:10px 12px;border-radius:10px;background:var(--panel);color:var(--fg);width:100%}
+select:focus-visible,button:focus-visible,.row:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.meter{background:var(--panel);border-radius:16px;padding:18px;display:grid;gap:12px;justify-items:center}
+.meter svg{width:100%;max-width:440px;height:auto;overflow:visible}
+.readout{display:flex;gap:18px;align-items:baseline;flex-wrap:wrap;justify-content:center}
+.note{font-family:var(--display);font-weight:700;font-size:3.4rem;line-height:1;color:var(--fg);text-shadow:0 0 14px rgba(47,216,255,.35)}
+.hz{font-family:var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.verdict{font-weight:600;font-size:1.05rem;padding:7px 16px;border-radius:999px;background:var(--panel2);color:var(--fg);border:1px solid var(--line);text-align:center}
+.verdict.up{background:var(--up-soft);color:var(--up);border-color:var(--up);box-shadow:0 0 12px rgba(255,180,84,.3)}
+.verdict.down{background:var(--down-soft);color:var(--down);border-color:var(--down);box-shadow:0 0 12px rgba(127,168,255,.3)}
+.verdict.ok{background:var(--ok-soft);color:var(--ok);border-color:var(--ok);box-shadow:0 0 14px rgba(77,255,166,.4)}
+.controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+button{font:inherit;font-weight:600;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--fg);padding:9px 14px;transition:box-shadow .15s,border-color .15s}
+button:hover{border-color:var(--neon);box-shadow:0 0 10px rgba(47,216,255,.35)}
+button.primary{background:var(--neon-soft);border-color:var(--neon);color:var(--neon);box-shadow:0 0 12px rgba(47,216,255,.35)}
+button.primary:hover{box-shadow:0 0 18px var(--neon-glow)}
+.msg{font-size:.88rem;color:var(--muted);text-align:center;max-width:52ch}
+.strings{display:grid;gap:8px}
+.row{display:grid;grid-template-columns:2.2rem minmax(0,1fr) auto auto;gap:12px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.row:hover{border-color:rgba(47,216,255,.6)}
+.row.active{border-color:var(--neon);box-shadow:0 0 0 1px var(--neon),0 0 16px var(--neon-glow)}
+.row.done{border-color:rgba(77,255,166,.5)}
+.num{font-family:var(--mono);font-weight:500;width:2rem;height:2rem;border-radius:50%;display:grid;place-items:center;border:1px solid var(--neon);color:var(--neon);font-size:.85rem;box-shadow:0 0 8px rgba(47,216,255,.3)}
+.row.done .num{border-color:var(--ok);color:var(--ok);background:var(--ok-soft);box-shadow:0 0 8px rgba(77,255,166,.4)}
+.notes{font-family:var(--mono);font-size:1rem;min-width:0}
+.notes b{font-family:var(--display);font-size:1.25rem;color:var(--fg)}
+.notes .from{color:var(--muted)}
+.gauge-line{display:block;font-family:var(--body);font-size:.8rem;color:var(--muted)}
+.badge{font-size:.82rem;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap;border:1px solid transparent}
+.badge.up{background:var(--up-soft);color:var(--up);border-color:rgba(255,180,84,.5)}
+.badge.down{background:var(--down-soft);color:var(--down);border-color:rgba(127,168,255,.5)}
+.badge.same{background:var(--panel2);color:var(--muted);border-color:var(--line)}
+.play{padding:6px 10px;font-size:.85rem;color:var(--neon)}
+.warn{font-size:.85rem;background:var(--up-soft);color:var(--up);border:1px solid var(--up);border-radius:10px;padding:10px 12px}
+.foot{font-size:.82rem;color:var(--muted)}
+@media (max-width:520px){
+  .pick{grid-template-columns:1fr}.arrow{display:none}
+  .row{grid-template-columns:2.2rem minmax(0,1fr) auto}
+  .row .play{grid-column:3;grid-row:1}
+  .row .badge{grid-column:2 / 4;justify-self:start}
+}
+@media (prefers-reduced-motion:reduce){#needle{transition:none!important}*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Stemkastje</h1>
+    <p class="sub">Kies waar je gitaar nu op staat en waar je naartoe wilt. Per snaar zie je hoeveel halve tonen strakker of losser, en de meter vertelt je wanneer hij klopt.</p>
+  </header>
+
+  <section class="pick">
+    <div><label class="label" for="from">Nu gestemd in</label><select id="from" class="neon"></select></div>
+    <span class="arrow">→</span>
+    <div><label class="label" for="to">Doelstemming</label><select id="to" class="neon"></select></div>
+  </section>
+
+  <section class="meter neon" aria-live="polite">
+    <svg viewBox="0 0 400 210" role="img" aria-label="Stemmeter in cents">
+      <g id="ticks"></g>
+      <rect x="186" y="10" width="28" height="10" rx="3" fill="var(--ok-soft)" stroke="var(--ok)" stroke-width="1"></rect>
+      <text x="40" y="200" fill="var(--down)" font-family="IBM Plex Mono, monospace" font-size="13" text-anchor="middle">−50</text>
+      <text x="360" y="200" fill="var(--up)" font-family="IBM Plex Mono, monospace" font-size="13" text-anchor="middle">+50</text>
+      <text x="200" y="200" fill="var(--muted)" font-family="IBM Plex Mono, monospace" font-size="13" text-anchor="middle">0 cent</text>
+      <g id="needle" style="transform-origin:200px 190px;transition:transform .12s ease-out">
+        <line x1="200" y1="190" x2="200" y2="28" stroke="var(--neon)" stroke-width="3" style="filter:drop-shadow(0 0 4px var(--neon))" stroke-linecap="round"></line>
+      </g>
+      <circle cx="200" cy="190" r="7" fill="var(--neon)" style="filter:drop-shadow(0 0 6px var(--neon))"></circle>
+    </svg>
+    <div class="readout"><span class="note" id="noteName">–</span><span class="hz" id="hz">— Hz · — cent</span></div>
+    <div class="verdict" id="verdict">Start de microfoon en tokkel een snaar</div>
+    <div class="controls">
+      <button class="primary" id="micBtn">Start microfoon</button>
+      <button id="autoBtn" aria-pressed="true">Snaar: automatisch</button>
+    </div>
+    <p class="msg" id="msg">Lukt de microfoon niet in deze weergave? Gebruik de ▶-knop bij elke snaar om de doeltoon te horen en stem op gehoor.</p>
+  </section>
+
+  <div class="warn" id="warn" hidden></div>
+
+  <section class="strings" id="strings" aria-label="Snaren"></section>
+
+  <p class="foot">Volgorde-tip: stem eerst alle snaren grof, daarna nog een rondje fijn. Als je veel snaren strakker zet, buigt de hals iets mee en zakken de eerste snaren weer een beetje.</p>
+</div>
+
+<script>
+const TUNINGS = {
+  "standaard": {name:"Standaard (E A D G B E)", notes:["E2","A2","D3","G3","B3","E4"]},
+  "openG":     {name:"Open G (D G D G B D)", notes:["D2","G2","D3","G3","B3","D4"]},
+  "openD":     {name:"Open D (D A D F# A D)", notes:["D2","A2","D3","F#3","A3","D4"]},
+  "openE":     {name:"Open E (E B E G# B E)", notes:["E2","B2","E3","G#3","B3","E4"]},
+  "openA":     {name:"Open A (E A E A C# E)", notes:["E2","A2","E3","A3","C#4","E4"]},
+  "openC":     {name:"Open C (C G C G C E)", notes:["C2","G2","C3","G3","C4","E4"]},
+  "openDm":    {name:"Open D mineur (D A D F A D)", notes:["D2","A2","D3","F3","A3","D4"]},
+  "dropD":     {name:"Drop D (D A D G B E)", notes:["D2","A2","D3","G3","B3","E4"]},
+  "dropC":     {name:"Drop C (C G C F A D)", notes:["C2","G2","C3","F3","A3","D4"]},
+  "dadgad":    {name:"DADGAD", notes:["D2","A2","D3","G3","A3","D4"]},
+  "halfDown":  {name:"Halve toon lager (Eb Ab Db Gb Bb Eb)", notes:["D#2","G#2","C#3","F#3","A#3","D#4"]},
+  "wholeDown": {name:"Hele toon lager (D G C F A D)", notes:["D2","G2","C3","F3","A3","D4"]}
+};
+const NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+const NL = {"C#":"C♯","D#":"E♭","F#":"F♯","G#":"G♯","A#":"B♭"};
+const midiOf = n => { const m=n.match(/^([A-G]#?)(\d)$/); return NAMES.indexOf(m[1]) + (+m[2]+1)*12; };
+const freqOf = m => 440*Math.pow(2,(m-69)/12);
+const label = m => { const n=NAMES[m%12]; return (NL[n]||n); };
+const labelOct = m => label(m) + "<sub>"+(Math.floor(m/12)-1)+"</sub>";
+
+const $ = id => document.getElementById(id);
+const fromSel=$("from"), toSel=$("to");
+for (const [k,t] of Object.entries(TUNINGS)){ fromSel.add(new Option(t.name,k)); toSel.add(new Option(t.name,k)); }
+fromSel.value="standaard"; toSel.value="standaard";
+
+let locked = null;      // index 0..5 (0 = dikste snaar) of null = automatisch
+let done = new Set();
+let active = null;
+
+function dutchSteps(n){ const a=Math.abs(n); if(a===1) return "1 halve toon"; return a+" halve tonen"; }
+
+function render(){
+  const from = TUNINGS[fromSel.value].notes.map(midiOf);
+  const to = TUNINGS[toSel.value].notes.map(midiOf);
+  const box = $("strings"); box.innerHTML="";
+  const risky=[];
+  // snaar 1 (dunste) bovenaan, snaar 6 onderaan
+  for (let i=5;i>=0;i--){
+    const d = to[i]-from[i], stringNo = 6-i;
+    if (d>=3) risky.push(stringNo);
+    const row = document.createElement("div");
+    row.className = "row"+(active===i?" active":"")+(done.has(i)?" done":"");
+    row.tabIndex=0;
+    row.innerHTML = `<span class="num">${done.has(i)?"✓":stringNo}</span>
+      <span class="notes"><span class="from">${labelOct(from[i])}</span> → <b>${labelOct(to[i])}</b>
+        <span class="gauge-line">Snaar ${stringNo} · doel ${freqOf(to[i]).toFixed(1)} Hz</span></span>
+      <span class="badge ${d>0?"up":d<0?"down":"same"}">${d>0?"↑ "+dutchSteps(d)+" strakker":d<0?"↓ "+dutchSteps(d)+" losser":"blijft gelijk"}</span>
+      <button class="play" aria-label="Speel doeltoon snaar ${stringNo}">▶</button>`;
+    row.querySelector(".play").addEventListener("click",ev=>{ev.stopPropagation(); pluck(freqOf(to[i]));});
+    const choose=()=>{ locked = (locked===i?null:i); active = locked; updateAuto(); render(); };
+    row.addEventListener("click",choose);
+    row.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();choose();} });
+    box.appendChild(row);
+  }
+  const w=$("warn");
+  if (risky.length){ w.hidden=false; w.textContent=`Let op: snaar ${risky.join(", ")} gaat 3 halve tonen of meer omhoog. Dat geeft flink extra spanning en een kans op breken. Draai rustig, of overweeg een dunnere snaar.`; }
+  else w.hidden=true;
+}
+function updateAuto(){ const b=$("autoBtn"); b.setAttribute("aria-pressed", locked===null); b.textContent = locked===null ? "Snaar: automatisch" : "Snaar "+(6-locked)+" vast · klik voor automatisch"; }
+$("autoBtn").addEventListener("click",()=>{ locked=null; updateAuto(); render(); });
+fromSel.addEventListener("change",()=>{done.clear();render();});
+toSel.addEventListener("change",()=>{done.clear();render();});
+
+// meter-schaal
+(function(){
+  const g=$("ticks"); let s="";
+  for (let c=-50;c<=50;c+=5){
+    const a=(c/50)*60*Math.PI/180, r1=c%25===0?150:158, r2=168;
+    const x1=200+r1*Math.sin(a), y1=190-r1*Math.cos(a), x2=200+r2*Math.sin(a), y2=190-r2*Math.cos(a);
+    const col = c===0?"var(--ok)":c<0?"var(--down)":"var(--up)";
+    s+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="${c%25===0?2.5:1.2}" stroke-linecap="round"/>`;
+  }
+  g.innerHTML=s;
+})();
+function setNeedle(c){ const v=Math.max(-50,Math.min(50,c)); $("needle").style.transform=`rotate(${v/50*60}deg)`; }
+
+// referentietoon
+let ctx=null;
+function audio(){ if(!ctx) ctx=new (window.AudioContext||window.webkitAudioContext)(); if(ctx.state==="suspended") ctx.resume(); return ctx; }
+function pluck(f){
+  const a=audio(), t=a.currentTime;
+  const o=a.createOscillator(), o2=a.createOscillator(), lp=a.createBiquadFilter(), g=a.createGain();
+  o.type="sawtooth"; o.frequency.value=f; o2.type="triangle"; o2.frequency.value=f*2;
+  lp.type="lowpass"; lp.frequency.setValueAtTime(f*8,t); lp.frequency.exponentialRampToValueAtTime(f*1.5,t+1.5);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.25,t+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+2.4);
+  o.connect(lp); o2.connect(lp); lp.connect(g); g.connect(a.destination);
+  o.start(t); o2.start(t); o.stop(t+2.5); o2.stop(t+2.5);
+}
+
+// toonhoogte-detectie (autocorrelatie)
+function detect(buf, sr){
+  let SIZE=buf.length, rms=0;
+  for (let i=0;i<SIZE;i++) rms+=buf[i]*buf[i];
+  if (Math.sqrt(rms/SIZE)<0.012) return -1;
+  let r1=0, r2=SIZE-1; const th=0.2;
+  for (let i=0;i<SIZE/2;i++) if (Math.abs(buf[i])<th){r1=i;break;}
+  for (let i=1;i<SIZE/2;i++) if (Math.abs(buf[SIZE-i])<th){r2=SIZE-i;break;}
+  buf=buf.slice(r1,r2); SIZE=buf.length;
+  const minLag=Math.floor(sr/1000), maxLag=Math.min(SIZE-1,Math.floor(sr/55));
+  const c=new Float32Array(maxLag+2);
+  for (let lag=0;lag<=maxLag+1;lag++){ let s=0; for(let j=0;j<SIZE-lag;j++) s+=buf[j]*buf[j+lag]; c[lag]=s; }
+  let d=0; while (d<maxLag && c[d]>c[d+1]) d++;
+  let maxv=-1, pos=-1;
+  for (let i=Math.max(d,minLag);i<=maxLag;i++) if (c[i]>maxv){maxv=c[i];pos=i;}
+  if (pos<1 || maxv < c[0]*0.3) return -1;
+  const x1=c[pos-1], x2=c[pos], x3=c[pos+1], a=(x1+x3-2*x2)/2, b=(x3-x1)/2;
+  const T=a?pos-b/(2*a):pos;
+  return sr/T;
+}
+
+let hist=[], inTuneSince=0;
+function onPitch(f){
+  hist.push(f); if(hist.length>5) hist.shift();
+  const med=[...hist].sort((a,b)=>a-b)[Math.floor(hist.length/2)];
+  const to=TUNINGS[toSel.value].notes.map(midiOf);
+  let idx=locked;
+  if (idx===null){ let best=1e9; to.forEach((m,i)=>{ const c=Math.abs(1200*Math.log2(med/freqOf(m))); if(c<best){best=c;idx=i;} }); }
+  if (active!==idx){ active=idx; render(); }
+  const target=freqOf(to[idx]), cents=1200*Math.log2(med/target);
+  const nearest=Math.round(12*Math.log2(med/440)+69);
+  $("noteName").innerHTML=labelOct(nearest);
+  $("hz").textContent=`${med.toFixed(1)} Hz · ${cents>=0?"+":""}${cents.toFixed(0)} cent t.o.v. ${label(to[idx])}`;
+  setNeedle(cents);
+  const v=$("verdict"), semis=Math.round(Math.abs(cents)/100);
+  if (Math.abs(cents)<=4){
+    v.className="verdict ok"; v.textContent=`Snaar ${6-idx} klopt ✓`;
+    if(!inTuneSince) inTuneSince=performance.now();
+    if(performance.now()-inTuneSince>600 && !done.has(idx)){ done.add(idx); render(); }
+  } else {
+    inTuneSince=0;
+    const extra = semis>=1 ? ` (nog ±${dutchSteps(semis)})` : "";
+    if (cents<0){ v.className="verdict up"; v.textContent=`Snaar ${6-idx}: strakker draaien ↑${extra}`; }
+    else { v.className="verdict down"; v.textContent=`Snaar ${6-idx}: losser draaien ↓${extra}`; }
+  }
+}
+
+let running=false, stream=null;
+$("micBtn").addEventListener("click",async()=>{
+  if (running){ stream.getTracks().forEach(t=>t.stop()); running=false; $("micBtn").textContent="Start microfoon"; return; }
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+  }catch(e){
+    $("msg").textContent="De microfoon is hier niet beschikbaar. Open Stemkastje als los bestand in Chrome, Edge of Firefox en sta de microfoon toe, of stem op gehoor met de ▶-knoppen.";
+    return;
+  }
+  const a=audio(), src=a.createMediaStreamSource(stream), an=a.createAnalyser();
+  an.fftSize=4096; src.connect(an);
+  const buf=new Float32Array(an.fftSize);
+  running=true; $("micBtn").textContent="Stop microfoon";
+  $("msg").textContent="Luistert… tokkel één snaar tegelijk en laat hem uitklinken.";
+  (function loop(){
+    if(!running) return;
+    an.getFloatTimeDomainData(buf);
+    const f=detect(buf,a.sampleRate);
+    if (f>55 && f<1000) onPitch(f); else if (f<0) hist=[];
+    requestAnimationFrame(loop);
+  })();
+});
+
+render(); updateAuto(); setNeedle(0);
+</script>
+
+</body>
+</html>
